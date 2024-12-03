@@ -114,10 +114,26 @@ function AdminPanelLayout({ auth, children }) {
                         </SubMenu>
 
                         <SubMenu label="Gestion des annonces" icon={<AnnouncementIcon />}>
-                            <MenuItem component={<Link href="/admin/ads" />}>Liste des annonces</MenuItem>
-                            <MenuItem component={<Link href={route("admin.annonce.create",auth.user.id)} />}>Ajouter une annonce</MenuItem>
-                            <MenuItem component={<Link href={route('admin.categorie.index',auth.user.id)} />}>Catégories d'annonces</MenuItem>
-                            <MenuItem component={<Link href="/admin/ads/moderation" />}>Modération des annonces</MenuItem>
+                            <MenuItem component={<Link href={route('admin.annonce.index', auth.user.id)} />}>
+                                Liste des annonces
+                            </MenuItem>
+                            <MenuItem component={<Link href={route('admin.annonce.create', auth.user.id)} />}>
+                                Ajouter une annonce
+                            </MenuItem>
+                            <SubMenu label="Configuration">
+                                <MenuItem component={<Link href={route('admin.categorie.index', auth.user.id)} />}>
+                                    Catégories
+                                </MenuItem>
+                                <MenuItem component={<Link href={route('admin.champs.index', {admin: auth.user.id})} />}>
+                                    Champs personnalisés
+                                </MenuItem>
+                            </SubMenu>
+                            <MenuItem component={<Link href="/admin/ads/moderation" />}>
+                                Modération
+                            </MenuItem>
+                            <MenuItem component={<Link href="/admin/ads/reports" />}>
+                                Signalements
+                            </MenuItem>
                         </SubMenu>
 
                         <SubMenu label="Vendeurs" icon={<StorefrontIcon />}>

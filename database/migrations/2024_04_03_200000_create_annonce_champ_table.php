@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('annonce_images', function (Blueprint $table) {
+        Schema::create('annonce_champ', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('annonce_id')->nullable()->constrained('annonces')->cascadeOnDelete();
-            $table->foreignId('image_id')->nullable()->constrained('images')->cascadeOnDelete();
-            $table->boolean('status')->default(true)->nullable();
+            $table->foreignId('annonce_id')->constrained('annonces')->cascadeOnDelete();
+            $table->foreignId('champ_id')->constrained('champs')->cascadeOnDelete();
+            $table->text('valeur')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('annonce_images');
+        Schema::dropIfExists('annonce_champ');
     }
 };

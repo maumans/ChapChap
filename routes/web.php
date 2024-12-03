@@ -53,14 +53,20 @@ Route::middleware(['auth'])->group(function () {
     // Gestion des annonces admin
     Route::resource('admin.annonce', \App\Http\Controllers\Admin\AnnonceController::class);
     
+
+    // Gestion des champs
+    Route::resource('admin.champs', \App\Http\Controllers\Admin\ChampController::class);
+    Route::post('admin/champs/update-order', [\App\Http\Controllers\Admin\ChampController::class, 'updateOrder'])
+        ->name('admin.champs.updateOrder');
+
     // Gestion des catégories admin
     Route::resource('admin.categorie', \App\Http\Controllers\Admin\CategorieController::class)->except('show');
-    Route::get('/categories/{categorie}/champsManagement', 
+    Route::get('admin/{admin}/categories/{categorie}/champs', 
         [\App\Http\Controllers\Admin\CategorieController::class, 'champsManagement'])
-        ->name("categorie.champsManagement");
-    Route::post('/categories/{categorie}/updateChampsOrdre', 
+        ->name('admin.categorie.champsManagement');
+    Route::post('admin/{admin}/categories/{categorie}/champs/ordre', 
         [\App\Http\Controllers\Admin\CategorieController::class, 'updateChampsOrdre'])
-        ->name("categorie.updateChampsOrdre");
+        ->name('admin.categorie.updateChampsOrdre');
 });
 
 require __DIR__.'/auth.php';

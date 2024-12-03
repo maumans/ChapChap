@@ -7,6 +7,8 @@ use App\Models\Categorie;
 use App\Models\champ;
 use App\Models\Devise;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class AnnonceController extends Controller
@@ -68,7 +70,6 @@ class AnnonceController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
         $validated = $request->validate([
             'titre' => 'required|string|max:255',
             'description' => 'required|string',
@@ -77,11 +78,15 @@ class AnnonceController extends Controller
             'telephone' => 'required|string',
             'whatsApp' => 'nullable|string',
             'facebook' => 'nullable|string',
-            'categorie_id' => 'required|exists:categories,id',
+            'categorie.id' => 'required|exists:categories,id',
+            'devise_id' => 'required',
             'images' => 'required|array|min:1',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'champs' => 'array'
+            'champs' => 'array',
+            'prix' => 'required|numeric|min:0',
         ]);
+
+        
 
         DB::beginTransaction();
 
@@ -95,34 +100,44 @@ class AnnonceController extends Controller
                 'telephone' => $validated['telephone'],
                 'whatsApp' => $validated['whatsApp'],
                 'facebook' => $validated['facebook'],
-                'categorie_id' => $validated['categorie_id'],
-                'user_id' => auth()->id(),
-                'status' => true
+                'categorie_id' => $validated['categorie']['id'],
+                'devise_id' => $validated['devise_id'],
+                'prix' => $validated['prix'],
+                'annonciateur_id' => Auth::id(),
+                'status' => true,
             ]);
 
             // Gérer les images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('annonces', 'public');
+                    $path = $image->store('annonce/images', 'public');
                     $annonce->images()->create([
-                        'url' => $path
+                        'url' => $path,
+                        'date' => now(),
+                        'status' => true,
+                        'titre' => $annonce->titre, 
+                        'description' => 'Image de l\'annonce ' . $annonce->titre 
                     ]);
                 }
             }
 
             // Gérer les champs personnalisés
-            if (isset($validated['champs'])) {
+            if (isset($validated['champs']) && is_array($validated['champs'])) {
+                $categorie = Categorie::with('champs')->find($validated['categorie']['id']);
+                
                 foreach ($validated['champs'] as $champNom => $valeur) {
-                    $champ = Champ::where('nom', $champNom)->first();
+                    // Trouver le champ par son nom dans les champs de la catégorie
+                    $champ = $categorie->champs->firstWhere('nom', $champNom);
                     if ($champ) {
                         $annonce->champs()->attach($champ->id, ['valeur' => $valeur]);
                     }
                 }
             }
-
+            
             DB::commit();
+            
+            return redirect()->route('annonce.show', $annonce->id)->with('success', 'Annonce créée avec succès');
 
-            return redirect()->route('annonce.show', $annonce)->with('success', 'Annonce créée avec succès');
         }
         catch (\Throwable $th) {
             DB::rollBack();
@@ -137,9 +152,38 @@ class AnnonceController extends Controller
      */
     public function show(string $id)
     {
-        $annonce = Annonce::where('status', true)->paginate(10);
+        $annonce = Annonce::with(['categorie.categorie', 'annonciateur', 'images', 'devise'])
+            ->findOrFail($id);
 
-        return Inertia::render('Annonce/Show');
+        // Charger les champs avec leurs valeurs formatées
+        $annonce->load(['champs' => function($query) {
+            $query->select('champs.*')
+                  ->withPivot('valeur');
+        }]);
+
+        // Formater les caractéristiques
+        $annonce->champs = $annonce->champs->map(function($champ) {
+            $valeur = $champ->pivot->valeur;
+            
+            // Si le champ a des options prédéfinies
+            if ($champ->options && is_array($champ->options)) {
+                // Chercher l'option correspondant à la valeur
+                $option = collect($champ->options)->firstWhere('value', $valeur);
+                if ($option) {
+                    $champ->formatted_value = $option['label'];
+                } else {
+                    $champ->formatted_value = $valeur;
+                }
+            } else {
+                $champ->formatted_value = $valeur;
+            }
+
+            return $champ;
+        });
+
+        return Inertia::render('Annonce/Show', [
+            'annonceSt' => $annonce
+        ]);
     }
 
     /**

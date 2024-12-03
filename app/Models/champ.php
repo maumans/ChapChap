@@ -9,10 +9,13 @@ class Champ extends Model
 {
     use HasFactory;
 
+    protected $table = 'champs';
+
     protected $fillable = [
         'nom',
         'label',
         'type',
+        'placeholder',
         'description',
         'options',
         'ordre'
@@ -21,6 +24,23 @@ class Champ extends Model
     protected $casts = [
         'options' => 'array'
     ];
+
+    public function getFormattedValueAttribute($value)
+    {
+        if (!$value) return null;
+
+        // Si le champ a des options spécifiques pour les unités
+        if (isset($this->options['unite'])) {
+            return "{$value} {$this->options['unite']}";
+        }
+
+        // Sinon, utiliser l'unité par défaut selon le type
+        if (isset(self::$typeUnits[$this->type])) {
+            return "{$value} " . self::$typeUnits[$this->type];
+        }
+
+        return $value;
+    }
 
     public function categories()
     {

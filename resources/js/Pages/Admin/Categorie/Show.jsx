@@ -4,7 +4,7 @@ import {Breadcrumbs, Button, Divider, FormControl, InputLabel, MenuItem, Select,
 import {Link, useForm} from "@inertiajs/react";
 import {formatNumber} from "chart.js/helpers";
 import {Filter, FilterList, InputOutlined, Place, ViewList, Window} from "@mui/icons-material";
-import Image3 from "../../../images/Welcome img 1.jpg";
+import Image3 from "../../../../images/Welcome img 1.jpg";
 import Pagination from '@mui/material/Pagination';
 import AnnonceCard from "@/Components/Display/AnnonceCard.jsx";
 import AnnonceRow from "@/Components/Display/AnnonceRow.jsx";

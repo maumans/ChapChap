@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('images', function (Blueprint $table) {
             $table->id();
             $table->date('date')->nullable();
+            $table->string('url')->nullable();
             $table->longText('description')->nullable();
             $table->boolean('status')->default(true)->nullable();
             $table->foreignId('annonce_id')->nullable()->constrained('annonces')->cascadeOnDelete();
