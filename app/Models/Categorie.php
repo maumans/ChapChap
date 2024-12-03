@@ -34,4 +34,8 @@ class Categorie extends Model
         return $parents;
     }
 
+    public function champs() {
+        return $this->belongsToMany(Champ::class, 'categorie_champ');
+    }
+
 }

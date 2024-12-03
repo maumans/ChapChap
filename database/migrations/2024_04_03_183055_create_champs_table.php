@@ -11,12 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('marques', function (Blueprint $table) {
+        Schema::create('champs', function (Blueprint $table) {
             $table->id();
-            $table->string('libelle')->nullable();
-            $table->boolean('status')->default(true)->nullable();
+            $table->string('nom');
+            $table->string('label');
+            $table->string('type');
+            $table->text('placeholder')->nullable();
+            $table->text('description')->nullable();
+            $table->json('options')->nullable();
+            $table->integer('ordre')->default(0);
             $table->timestamps();
         });
+
+
     }
 
     /**
@@ -24,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('marques');
+        Schema::dropIfExists('champs');
     }
 };

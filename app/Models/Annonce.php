@@ -34,4 +34,11 @@ class Annonce extends Model
     {
         return $this->hasMany(AnnonceTaille::class);
     }
+
+    public function champs()
+    {
+        return $this->belongsToMany(Champ::class, 'annonce_champ')
+            ->withPivot('valeur')
+            ->withTimestamps();
+    }
 }

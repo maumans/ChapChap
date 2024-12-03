@@ -17,21 +17,21 @@ function CategorieMain({categories,handleMouseEnter,handleMouseLeave}) {
                     slidesPerView={"auto"}
                     className={'p-2'}
                 >
-                    <SwiperSlide onMouseLeave={handleMouseLeave} onMouseEnter={(e)=>handleMouseEnter(e,{'id':0,'nom':'Boutique officielle'})} style={{ width: 'auto' }}>
+                    <SwiperSlide onMouseEnter={(e)=>handleMouseEnter(e,{'id':0,'nom':'Boutique officielle'})} style={{ width: 'auto' }}>
                         <NavLink href={route('categorie.index')}>
                             Boutique officielle
                         </NavLink>
                     </SwiperSlide>
                     {
                         categories.map((c)=>(
-                            <SwiperSlide onMouseLeave={handleMouseLeave} onMouseEnter={(e)=>handleMouseEnter(e,c)} style={{ width: 'auto' }} key={c.id}>
+                            <SwiperSlide onMouseEnter={(e)=>handleMouseEnter(e,c)} style={{ width: 'auto' }} key={c.id}>
                                 <NavLink href={route('categorie.show',c.id)}>
                                     <span className={"first-letter:uppercase"}>{c.nom}</span>
                                 </NavLink>
                             </SwiperSlide>
                         ))
                     }
-                    <SwiperSlide onMouseLeave={handleMouseLeave} onMouseEnter={(e)=>handleMouseEnter(e,{'id':20,'nom':'Autres'})} style={{ width: 'auto' }}>
+                    <SwiperSlide onMouseEnter={(e)=>handleMouseEnter(e,{'id':20,'nom':'Autres'})} style={{ width: 'auto' }}>
                         <NavLink href={route('categorie.index')}>
                             Autres
                         </NavLink>

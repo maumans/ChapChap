@@ -2,13 +2,13 @@ import React, {useEffect, useState} from 'react';
 import Authenticated from "@/Layouts/AuthenticatedLayout.jsx";
 import {Breadcrumbs, Button, Divider} from "@mui/material";
 import {Link} from "@inertiajs/react";
-import Image1 from "../../../images/Welcome img 1.jpg"
+import Image1 from "../../../../images/Welcome img 1.jpg"
 import {Navigation} from "swiper/modules";
 import {Swiper, SwiperSlide} from "swiper/react";
 import Image2
-    from "../../../images/gros-plan-jolie-jeune-femme-afro-americaine-regardant-enthousiasme-ecran-son-ordinateur-portable_181624-43269.jpg";
+    from "../../../../images/gros-plan-jolie-jeune-femme-afro-americaine-regardant-enthousiasme-ecran-son-ordinateur-portable_181624-43269.jpg";
 import {formatNumber} from "chart.js/helpers";
-import Image3 from "../../../images/Welcome img 1.jpg";
+import Image3 from "../../../../images/Welcome img 1.jpg"
 import {Favorite, Place} from "@mui/icons-material";
 import PrimaryButton from "@/Components/PrimaryButton.jsx";
 

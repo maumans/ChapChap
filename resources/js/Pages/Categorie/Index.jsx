@@ -247,7 +247,7 @@ function Index({auth,categories}) {
                                     {/*{
                                     icon && icon
                                 }*/}
-                                    <span className={active?'text-orange-500 text-sm':'text-sm text-black'}>
+                                    <span className={active?'text-green-500 text-sm':'text-sm text-black'}>
                                     {text}
                                 </span>
                                 </Link>

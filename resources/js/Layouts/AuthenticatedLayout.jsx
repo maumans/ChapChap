@@ -16,7 +16,7 @@ import {
     ThemeProvider
 } from "@mui/material";
 import {frFR} from "@mui/material/locale";
-import {Favorite, ListAlt, Logout, Person, Search} from "@mui/icons-material";
+import {AddOutlined, Favorite, ListAlt, Logout, Person, Person2, Search} from "@mui/icons-material";
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -48,83 +48,70 @@ export default function Authenticated({ user, header, children,categories }) {
     const [categorie, setCategorie] = useState('Toutes les catégories');
     const [categorieHover, setCategorieHover] = useState(null);
 
-    /*const categorieMainRef =useRef(null)
-
-    useEffect(() => {
-        if (categorieMainRef.current) {
-            categorieMainRef.current.focus();
-        }
-    }, []);*/
-
-    //const [categories, setCategories] = useState(categories);
-/*
-    const [categories, setCategories] = useState([
-        {
-            'id':1,
-            'nom':'Homme'
-        },
-        {
-            'id':2,
-            'nom':'Femme'
-        },
-        {
-            'id':3,
-            'nom':'Enfant'
-        },
-        {
-            'id':4,
-            'nom':'Electronique'
-        },
-        {
-            'id':5,
-            'nom':'Divertissement'
-        },
-        {
-            'id':6,
-            'nom':'Maison'
-        },
-    ]);
-*/
-
-    const [menu,setMenu] = useState(false);
-
-    const [main, setMain] = useState(false);
-
     const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
-    const handleClick = (event) => {
+    const [hoveredCategory, setHoveredCategory] = useState(null);
+    const [menu, setMenu] = useState(false);
+    const [main, setMain] = useState(false);
+    const open = Boolean(anchorEl) && categorieHover !== null;
+    const timeoutRef = useRef(null);
+
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const popoverTimeout = useRef(null);
+
+    const handlePopoverOpen = (event, category) => {
+        clearTimeout(popoverTimeout.current);
         setAnchorEl(event.currentTarget);
+        setHoveredCategory(category);
+        setIsPopoverOpen(true);
     };
 
-    function handleEnterMain()
-    {
-        setMain(true)
-        alert("Enter")
-    }
+    const handlePopoverClose = () => {
+        popoverTimeout.current = setTimeout(() => {
+            setIsPopoverOpen(false);
+            setHoveredCategory(null);
+            setAnchorEl(null);
+        }, 100); // Réduit le délai à 100ms
+    };
 
-    function handleLeaveMain()
-    {
-        setMain(false)
-    }
+    const handlePopoverEnter = () => {
+        clearTimeout(popoverTimeout.current);
+        setIsPopoverOpen(true);
+    };
+
+    const handlePopoverLeave = () => {
+        setIsPopoverOpen(false);
+        setHoveredCategory(null);
+        setAnchorEl(null);
+    };
 
     const handleClose = () => {
-        if(!main)
-        {
-            setAnchorEl(null);
-            setCategorieHover(null)
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
         }
-
+        setAnchorEl(null);
+        setCategorieHover(null);
+        setMain(false);
+        setMenu(false);
     };
 
-    function handleMouseEnter(e,c)
-    {
-        handleClick(e)
-        setCategorieHover(c)
+    function handleMouseEnter(e, c) {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        setAnchorEl(e.currentTarget);
+        setCategorieHover(c);
+        setMain(true);
+        setMenu(true);
     }
 
-    useEffect(()=>{
-        categorieHover ? setMenu(true):setMenu(false)
-    },[categorieHover])
+    // Nettoyer le timeout lors du démontage du composant
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleChange = (event) => {
         setCategorie(event.target.value);
@@ -158,7 +145,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                             <MenuItem value={'Toutes les catégories'}>Toutes les catégories</MenuItem>
                                             {
                                                 categories?.map((c)=>(
-                                                    <MenuItem key={c.id} value={c.nom}>{c.nom}</MenuItem>
+                                                    <MenuItem className={'first-letter:uppercase'} key={c.id} value={c.nom}>{c.nom}</MenuItem>
                                                 ))
                                             }
 
@@ -168,8 +155,8 @@ export default function Authenticated({ user, header, children,categories }) {
                                             <Search className={'text-white p-0.5 px-1 font-bold'}/>
                                         </div>
                                     </div>
-                                    {/*<NavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                    Dashboard
+                                    {/*<NavLink href={route('admin.dashboard.index',user.id)} active={route().current('admin.dashboard.index')}>
+                                    Administration
                                 </NavLink>*/}
                                 </div>
                             </div>
@@ -186,7 +173,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                                         >
                                                             {
-                                                                "Bonjour, "+user.name
+                                                                "Bonjour, "+user.prenom+' '+user.nom
                                                             }
 
                                                             <svg
@@ -196,7 +183,10 @@ export default function Authenticated({ user, header, children,categories }) {
                                                                 fill="currentColor"
                                                             >
                                                                 <path
-                                                                    fillRule="evenodd"
+                                                                    className={!showingNavigationDropdown ? 'inline-flex' : 'hidden'}
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                    strokeWidth="2"
                                                                     d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
                                                                     clipRule="evenodd"
                                                                 />
@@ -211,7 +201,9 @@ export default function Authenticated({ user, header, children,categories }) {
                                                             <>
                                                                 <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><Person className={'text-green-500'}/> Profil</span></Dropdown.Link>
                                                                 <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><Favorite className={'text-green-500'}/> Vos favoris</span></Dropdown.Link>
-                                                                <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><ListAlt className={'text-green-500'}/> Vos annonces</span></Dropdown.Link>
+                                                                <Dropdown.Link href={route('admin.dashboard.index',user.id)}><span className={"flex items-center gap-2"}><Person2 className={'text-green-500'}/>Administration</span></Dropdown.Link>
+                                                                <Dropdown.Link href={route('annonce.index')}><span className={"flex items-center gap-2"}><ListAlt className={'text-green-500'}/> Vos annonces</span></Dropdown.Link>
+                                                                <Dropdown.Link href={route('annonce.create')}><span className={"flex items-center gap-2"}><AddOutlined className={'text-green-500'}/>Nouvelle annonce</span></Dropdown.Link>
                                                                 <Divider/>
                                                                 <Dropdown.Link href={route('logout')} method="post" as="button">
                                                                     <div className={"flex items-center justify-center gap-2 p-1 text-red-500"}><Logout/> Déconnexion</div>
@@ -267,9 +259,12 @@ export default function Authenticated({ user, header, children,categories }) {
                             user ?
                                 <>
                                     <div className="pt-2 pb-3 space-y-1">
-                                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                            Dashboard
-                                        </ResponsiveNavLink>
+                                        {
+                                            user &&
+                                            <ResponsiveNavLink href={route('admin.dashboard.index',user.id)} active={route().current('admin.dashboard.index')}>
+                                                Administration
+                                            </ResponsiveNavLink>
+                                        }
                                     </div>
 
                                     <div className="pt-4 pb-1 border-t border-gray-200">
@@ -289,9 +284,6 @@ export default function Authenticated({ user, header, children,categories }) {
                                 :
                                 <>
                                     <div className="pt-2 pb-3 space-y-1">
-                                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
-                                            Dashboard
-                                        </ResponsiveNavLink>
                                         <ResponsiveNavLink href={route('annonce.create')} active={route().current('annonce.create')}>
                                             Annonce
                                         </ResponsiveNavLink>
@@ -324,7 +316,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                     <MenuItem value={'Toutes les catégories'}>Toutes les catégories</MenuItem>
                                     {
                                         categories?.map((c)=>(
-                                            <MenuItem key={c.id} value={c.nom}><span className={"first-letter:uppercase"}>{c.nom}</span></MenuItem>
+                                            <MenuItem className={'first-letter:uppercase'} key={c.id} value={c.nom}><span className={"first-letter:uppercase"}>{c.nom}</span></MenuItem>
                                         ))
                                     }
                                 </Select>
@@ -335,13 +327,10 @@ export default function Authenticated({ user, header, children,categories }) {
                             </div>
                         </div>
                         <Divider className={'flex md:hidden'}/>
-                        <div onMouseLeave={handleClose} >
+                        <div onMouseLeave={handleClose}>
                             <CategorieMain categories={categories} handleMouseEnter={handleMouseEnter}/>
                             <Popover
                                 id="mouse-over-popover"
-                                sx={{
-                                    pointerEvents: 'none',
-                                }}
                                 open={open}
                                 anchorEl={anchorEl}
                                 anchorOrigin={{
@@ -354,17 +343,22 @@ export default function Authenticated({ user, header, children,categories }) {
                                 }}
                                 onClose={handleClose}
                                 disableRestoreFocus
+                                disableScrollLock={true}
                                 PaperProps={{
                                     style: {
                                         width: '100%',
+                                        marginTop: '-1px'
                                     },
+                                    onMouseEnter: () => {
+                                        setMain(true);
+                                        setMenu(true);
+                                    },
+                                    onMouseLeave: handleClose
                                 }}
-
                             >
                                 <div
-                                    onMouseEnter={handleEnterMain}
-                                    onMouseLeave={handleLeaveMain}
-                                    className={`w-full z-50 flex divide-x ${menu ?'flex transition duration-500':'hidden'}`}>
+                                    className={`w-full z-50 flex divide-x ${menu ? 'flex transition duration-500' : 'hidden'}`}
+                                >
                                     <div className={'w-3/12 bg-green-50 font-bold text-lg p-3 first-letter:uppercase'}>
                                         {
                                             categorieHover && categorieHover.nom
@@ -402,8 +396,6 @@ export default function Authenticated({ user, header, children,categories }) {
                                         </div>
                                     </div>
                                 </div>
-
-
                             </Popover>
                         </div>
                     </div>

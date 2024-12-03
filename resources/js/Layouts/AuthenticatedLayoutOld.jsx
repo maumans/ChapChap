@@ -6,7 +6,7 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import {createTheme, Divider, MenuItem, OutlinedInput, Select, ThemeProvider} from "@mui/material";
 import {frFR} from "@mui/material/locale";
-import {Favorite, ListAlt, Logout, Person, Search} from "@mui/icons-material";
+import {AddOutlined, Favorite, ListAlt, Logout, Person, Search} from "@mui/icons-material";
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
@@ -116,7 +116,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                             <MenuItem value={'Toutes les catégories'}>Toutes les catégories</MenuItem>
                                             {
                                                 categories?.map((c)=>(
-                                                    <MenuItem key={c.id} value={c.nom}>{c.nom}</MenuItem>
+                                                    <MenuItem className={'first-letter:uppercase'} key={c.id} value={c.nom}>{c.nom}</MenuItem>
                                                 ))
                                             }
 
@@ -144,7 +144,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                                         >
                                                             {
-                                                                "Bonjour, "+user.name
+                                                                "Bonjour, "+user.prenom+' '+user.nom
                                                             }
 
                                                             <svg
@@ -169,7 +169,12 @@ export default function Authenticated({ user, header, children,categories }) {
                                                             <>
                                                                 <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><Person className={'text-green-500'}/> Profil</span></Dropdown.Link>
                                                                 <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><Favorite className={'text-green-500'}/> Vos favoris</span></Dropdown.Link>
-                                                                <Dropdown.Link href={route('profile.edit')}><span className={"flex items-center gap-2"}><ListAlt className={'text-green-500'}/> Vos annonces</span></Dropdown.Link>
+                                                                {
+                                                                    <Dropdown.Link href={route('admin.dashboard.index',user.id)}><span className={"flex items-center gap-2"}><ListAlt className={'text-green-500'}/> Administration</span></Dropdown.Link>
+                                                                }
+                                                                <Dropdown.Link href={route('annonce.index')}><span className={"flex items-center gap-2"}><ListAlt className={'text-green-500'}/> Vos annonces</span></Dropdown.Link>
+                                                                <Dropdown.Link href={route('annonce.create')}><span className={"flex items-center gap-2"}><AddOutlined className={'text-green-500'}/>Nouvelle annonce</span></Dropdown.Link>
+
                                                                 <Divider/>
                                                                 <Dropdown.Link href={route('logout')} method="post" as="button">
                                                                     <div className={"flex items-center justify-center gap-2 p-1 text-red-500"}><Logout/> Déconnexion</div>
@@ -271,7 +276,7 @@ export default function Authenticated({ user, header, children,categories }) {
                                     <MenuItem value={'Toutes les catégories'}>Toutes les catégories</MenuItem>
                                     {
                                         categories?.map((c)=>(
-                                            <MenuItem key={c.id} value={c.nom}><span className={"first-letter:uppercase"}>{c.nom}</span></MenuItem>
+                                            <MenuItem className={'first-letter:uppercase'} key={c.id} value={c.nom}><span className={"first-letter:uppercase"}>{c.nom}</span></MenuItem>
                                         ))
                                     }
                                 </Select>

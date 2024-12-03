@@ -4,40 +4,45 @@ import {
     Autocomplete,
     Box,
     Breadcrumbs,
-    Button, DialogContent,
+    Button, 
     Divider,
-    FormControl, IconButton, InputAdornment,
+    FormControl, 
+    IconButton, 
+    InputAdornment,
     InputLabel,
-    MenuItem, Modal,
+    MenuItem, 
     Select,
     TextField,
-    Typography
 } from "@mui/material";
-import {Link, useForm} from "@inertiajs/react";
-import Image1 from "../../../images/Welcome img 1.jpg"
-import {Navigation} from "swiper/modules";
-import {Swiper, SwiperSlide} from "swiper/react";
-import Image2
-    from "../../../images/gros-plan-jolie-jeune-femme-afro-americaine-regardant-enthousiasme-ecran-son-ordinateur-portable_181624-43269.jpg";
-import {formatNumber} from "chart.js/helpers";
-import Image3 from "../../../images/Welcome img 1.jpg";
-import {Add, AddOutlined, Close, Favorite, InputOutlined, Label, Place, Visibility} from "@mui/icons-material";
-import PrimaryButton from "@/Components/PrimaryButton.jsx";
+import {Link, router, useForm} from "@inertiajs/react";
+import { 
+    AddOutlined, 
+    AddAPhoto,
+    Close, 
+    ContactPhone,
+    Facebook,
+    Info, 
+    Place, 
+    PriceChange,
+    Visibility
+} from "@mui/icons-material";
 import {VisuallyHiddenInput} from "@/Components/VisuallyHiddenInput.jsx";
 import Dialog from '@mui/material/Dialog';
+import RenderChamp from "@/Components/RenderChamp.jsx";
 
-function Create({auth,categories,devises}) {
+function Create({auth,categories,categoriesGroup,devises}) {
 
     const { data, setData, post, errors } = useForm({
         titre: '',
         prix: '',
-        devise_id: '',
+        devise_id: 1, // ID de la devise GNF par défaut
         description: '',
         adresse: '',
         nombreArticle: '',
         telephone: '',
         whatsApp: '',
         facebook: '',
+        categorie: null,
         type_annonce_id: '',
         annonciateur_id: '',
         marque_id: '',
@@ -69,28 +74,20 @@ function Create({auth,categories,devises}) {
         utilisation: '',
         fonctions: '',
         status: true,
-        images:[]
+        images: [],
+        champs: {}
     });
-
-    useEffect(()=>{
-        console.log(categories)
-    })
 
 
     const [categoriesSt,setCategoriesSt] = useState([]);
+    useEffect(() => {
+        setCategoriesSt(categoriesGroup);
+    }, [categoriesGroup]);
 
-
-    const [selectedCategory, setSelectedCategory] = useState(null);
-
-    const handleCategoryChange = (e) => {
-        const value = e.target.value;
-        setSelectedCategory(value);
-        setData('categorie_id', value);
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        //post('/annonces');
+        post(route('annonce.store'))
     };
 
     const [breadcrumbs,setBreadcrumbs]=useState([
@@ -144,6 +141,51 @@ function Create({auth,categories,devises}) {
         });
     };
 
+    const [champs, setChamps] = useState([]);
+
+    useEffect(() => {
+        if (data.categorie) {
+            axios.post(route('annonce.categorieChamps'), {
+                categorieId: data.categorie.id
+            })
+            .then((response) => {
+                setChamps(response.data);
+                setData('champs', {});
+            })
+            .catch((error) => {
+                console.error('Erreur lors de la récupération des champs:', error);
+            });
+        }
+    }, [data.categorie]);
+
+    const handleCategorieChange = (e,val) => {
+        setData('categorie',val);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, type, value, checked } = e.target;
+        
+        // Détermine la valeur en fonction du type de champ
+        let newValue;
+        switch (type) {
+            case 'checkbox':
+                newValue = checked;
+                break;
+            case 'number':
+                newValue = value === '' ? '' : Number(value);
+                break;
+            default:
+                newValue = value;
+        }
+
+        // Met à jour les valeurs des champs dans le state du formulaire
+        setData('champs', {
+            ...data.champs,
+            [name]: newValue
+        });
+    };
+
+
     return (
         <Authenticated user={auth.user} categories={categories}>
             <div className={"flex justify-center w-full md:mt-14 mt-24"}>
@@ -155,20 +197,22 @@ function Create({auth,categories,devises}) {
                                     {/*{
                                     icon && icon
                                 }*/}
-                                    <span className={active?'text-orange-500 text-sm':'text-sm text-black'}>
+                                    <span className={active?'text-green-500 text-sm':'text-sm text-black'}>
                                     {text}
                                 </span>
                                 </Link>
                             ))
                         }
                     </Breadcrumbs>
-                    <div className={"grid gap-5 mt-10 w-full"}>
-
-                        <div className={'grid gap-5 border p-2'}>
-                            <div className={'font-bold text-lg text-green-500'}>Informations générales</div>
-                            <div className={"w-full border flex flex-col gap-2 items-center p-2"}>
-                                <div className={"flex justify-center w-full"}>
-                                    Jusqu'a 20 photos
+                    <form onSubmit={handleSubmit} className={"grid gap-5 mt-10 w-full"}>
+                        {/* Section Photos */}
+                        <div className={'grid gap-5 border rounded-lg p-4 bg-white'}>
+                            <div className={'font-bold text-lg text-green-500 flex items-center gap-2'}>
+                                <AddAPhoto className="text-gray-600" /> Photos
+                            </div>
+                            <div className={"w-full border rounded-lg flex flex-col gap-2 items-center p-4 bg-gray-50"}>
+                                <div className={"flex justify-center w-full text-gray-600 text-sm"}>
+                                    Ajoutez jusqu'à 20 photos
                                 </div>
                                 <div className={'grid xl:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2'}>
                                     {
@@ -218,6 +262,13 @@ function Create({auth,categories,devises}) {
                                     </Button>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Section Informations */}
+                        <div className={'grid gap-6 border rounded-lg p-4 bg-white'}>
+                            <div className={'font-bold text-lg text-green-500 flex items-center gap-2'}>
+                                <Info className="text-gray-600" /> Informations générales
+                            </div>
                             <div className={'grid sm:grid-cols-2 gap-5'}>
                                 <TextField
                                     size={"small"}
@@ -230,40 +281,168 @@ function Create({auth,categories,devises}) {
                                     placeholder={"Ex: Nike air jordan 1"}
                                 />
 
-                                <TextField
-                                    className={'sm:col-span-2'}
-                                    size={"small"}
-                                    label="Description"
-                                    fullWidth
-                                    multiline
-                                    rows={4}
-                                    value={data.description}
-                                    onChange={e => setData('description', e.target.value)}
-                                    error={!!errors.description}
-                                    helperText={errors.description}
-                                    placeholder={'Decrivez brievement votre produit...'}
+                                <div className="sm:col-span-2">
+                                    <TextField
+                                        size={"small"}
+                                        label="Description"
+                                        fullWidth
+                                        multiline
+                                        rows={4}
+                                        value={data.description}
+                                        onChange={e => setData('description', e.target.value)}
+                                        error={!!errors.description}
+                                        helperText={errors.description}
+                                    />
+                                </div>
 
-                                />
+                                <div className="sm:col-span-2">
+                                    <Autocomplete
+                                        size={"small"}
+                                        className={"w-full"}
+                                        value={data.categorie}
+                                        onChange={handleCategorieChange}
+                                        disablePortal={true}
+                                        options={categoriesSt.sort((a,b)=>a?.categorie?.nom.localeCompare(b?.categorie?.nom))}
+                                        groupBy={(option) => option.categorie?.nom}
+                                        getOptionLabel={(option)=>option.nom}
+                                        filterOptions={customFilterOptions}
+                                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                                        renderInput={(params)=><TextField  
+                                            fullWidth 
+                                            {...params} 
+                                            placeholder={"Sélectionnez une catégorie"} 
+                                            label="Catégorie"
+                                            error={!!errors.categorie}
+                                            helperText={errors.categorie}
+                                        />}
+                                    />
+                                </div>
+
+                                {champs && champs.length > 0 && (
+                                    <div className="sm:col-span-2 grid sm:grid-cols-2 gap-5">
+                                        {champs.map((champ) => (
+                                            <RenderChamp
+                                                key={champ.id}
+                                                id={champ.id}
+                                                nom={champ.nom}
+                                                type={champ.type}
+                                                label={champ.label}
+                                                options={champ.options ? champ.options : null}
+                                                placeholder={champ.description}
+                                                size="small"
+                                                handleInputChange={handleInputChange}
+                                                data={data.champs}
+                                                error={errors[`champs.${champ.nom}`]}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section Prix et État */}
+                        <div className={'grid gap-6 border rounded-lg p-4 bg-white'}>
+                            <div className={'font-bold text-lg text-green-500 flex items-center gap-2'}>
+                                <PriceChange className="text-gray-600" /> Prix et état
+                            </div>
+                            <div className={'grid sm:grid-cols-2 gap-5'}>
+                                <FormControl size="small" fullWidth error={!!errors.etat_id}>
+                                    <InputLabel>État</InputLabel>
+                                    <Select
+                                        label="État"
+                                        value={data.etat_id}
+                                        onChange={e => setData('etat_id', e.target.value)}
+                                    >
+                                        <MenuItem value="neuf">Neuf</MenuItem>
+                                        <MenuItem value="excellent">Excellent</MenuItem>
+                                        <MenuItem value="tres_bon">Très bon</MenuItem>
+                                        <MenuItem value="bon">Bon</MenuItem>
+                                        <MenuItem value="acceptable">Acceptable</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                <div className="relative flex items-center gap-2">
+                                    <TextField
+                                        size="small"
+                                        label="Prix"
+                                        fullWidth
+                                        type="number"
+                                        value={data.prix}
+                                        onChange={e => setData('prix', e.target.value)}
+                                        error={!!errors.prix}
+                                        helperText={errors.prix}
+                                        placeholder="Ex: 1000000"
+                                        InputProps={{
+                                            endAdornment: (
+                                                <div className="flex items-center">
+                                                    <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+                                                    <Select
+                                                        value={data.devise_id}
+                                                        onChange={e => setData('devise_id', e.target.value)}
+                                                        variant="standard"
+                                                        sx={{
+                                                            '& .MuiSelect-select': {
+                                                                border: 'none',
+                                                                paddingRight: '24px',
+                                                                minWidth: '60px',
+                                                            },
+                                                            '&:before': {
+                                                                display: 'none',
+                                                            },
+                                                            '&:after': {
+                                                                display: 'none',
+                                                            },
+                                                        }}
+                                                    >
+                                                        {devises.map(devise => (
+                                                            <MenuItem key={devise.id} value={devise.id}>
+                                                                {devise.symbole}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </div>
+                                            ),
+                                        }}
+                                    />
+                                </div>
+
                                 <TextField
                                     size={"small"}
+                                    label="Nombre d'articles"
+                                    type="number"
+                                    fullWidth
+                                    value={data.nombreArticle}
+                                    onChange={e => setData('nombreArticle', e.target.value)}
+                                    error={!!errors.nombreArticle}
+                                    helperText={errors.nombreArticle}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Section Contact */}
+                        <div className={'grid gap-6 border rounded-lg p-4 bg-white'}>
+                            <div className={'font-bold text-lg text-green-500 flex items-center gap-2'}>
+                                <ContactPhone className="text-gray-600" /> Contact
+                            </div>
+                            <div className={'grid sm:grid-cols-2 gap-5'}>
+                                <TextField
+                                    size="small"
                                     label="Adresse"
                                     fullWidth
                                     value={data.adresse}
                                     onChange={e => setData('adresse', e.target.value)}
                                     error={!!errors.adresse}
                                     helperText={errors.adresse}
-                                    placeholder={'Ex: Dixinn Belle-vue'}
+                                    placeholder="Ex: Quartier Kipé, Commune de Ratoma"
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <Place className="text-gray-400" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                 />
-                                <TextField
-                                    size={"small"}
-                                    label="Nombre d'articles"
-                                    fullWidth
-                                    type="number"
-                                    value={data.nombreArticle}
-                                    onChange={e => setData('nombreArticle', e.target.value)}
-                                    error={!!errors.nombreArticle}
-                                    helperText={errors.nombreArticle}
-                                />
+
                                 <TextField
                                     InputProps={{
                                         startAdornment: <InputAdornment position="start">+224</InputAdornment>,
@@ -277,6 +456,7 @@ function Create({auth,categories,devises}) {
                                     helperText={errors.telephone}
                                     placeholder="Ex: 621993455"
                                 />
+
                                 <TextField
                                     InputProps={{
                                         startAdornment: <InputAdornment position="start">+224</InputAdornment>,
@@ -290,6 +470,7 @@ function Create({auth,categories,devises}) {
                                     helperText={errors.whatsApp}
                                     placeholder="Ex: 621993455"
                                 />
+
                                 <TextField
                                     size={"small"}
                                     label="Facebook"
@@ -299,222 +480,34 @@ function Create({auth,categories,devises}) {
                                     error={!!errors.facebook}
                                     helperText={errors.facebook}
                                     placeholder="Votre lien facebook"
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <Facebook className="text-gray-400" />
+                                            </InputAdornment>
+                                        ),
+                                    }}
                                 />
                             </div>
-
                         </div>
 
-                        <div className={'grid gap-5 border p-2'}>
-                            <div className={'font-bold text-lg text-green-500'}>Categorie</div>
-                            <div className={'grid xl:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2'}>
-                                <Autocomplete
-                                    size={"small"}
-                                    className={"w-full"}
-                                    onChange={(e,val)=>setData("categorie",val)}
-                                    disablePortal={true}
-                                    options={categories.sort((a,b)=>a?.categorie?.nom.localeCompare(b?.categorie?.nom))}
-                                    groupBy={(option) => option.categorie?.nom}
-                                    getOptionLabel={(option)=>option.nom}
-                                    filterOptions={customFilterOptions}
-                                    isOptionEqualToValue={(option, value) => option.id === value.id}
-                                    renderInput={(params)=><TextField  fullWidth {...params} placeholder={"Categorie"} label={params.nom}/>}
-                                    error={!!errors.categorie}
-                                />
-
-                            </div>
-
-                            Affichage conditionnel basé sur la catégorie sélectionnée
-                            {selectedCategory === 'voiture' && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails du véhicule</Typography>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <TextField
-                                            label="Kilométrage"
-                                            fullWidth
-                                            value={data.kilometrage}
-                                            onChange={e => setData('kilometrage', e.target.value)}
-                                            error={!!errors.kilometrage}
-                                            helperText={errors.kilometrage}
-                                        />
-                                        <TextField
-                                            label="Année de création"
-                                            fullWidth
-                                            type="date"
-                                            InputLabelProps={{ shrink: true }}
-                                            value={data.annee_creation}
-                                            onChange={e => setData('annee_creation', e.target.value)}
-                                            error={!!errors.annee_creation}
-                                            helperText={errors.annee_creation}
-                                        />
-                                    </div>
-                                </Box>
-                            )}
-
-                            {selectedCategory === 'sante' && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails de santé et beauté</Typography>
-                                    <TextField
-                                        label="Système de santé"
-                                        fullWidth
-                                        value={data.systeme_sante}
-                                        onChange={e => setData('systeme_sante', e.target.value)}
-                                        error={!!errors.systeme_sante}
-                                        helperText={errors.systeme_sante}
-                                    />
-                                </Box>
-                            )}
-
-                            {selectedCategory === 'bebe' && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails de bébé et soin des enfants</Typography>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <TextField
-                                            label="Âge"
-                                            fullWidth
-                                            value={data.age}
-                                            onChange={e => setData('age', e.target.value)}
-                                            error={!!errors.age}
-                                            helperText={errors.age}
-                                        />
-                                        <TextField
-                                            label="Poids"
-                                            fullWidth
-                                            value={data.poids}
-                                            onChange={e => setData('poids', e.target.value)}
-                                            error={!!errors.poids}
-                                            helperText={errors.poids}
-                                        />
-                                    </div>
-                                </Box>
-                            )}
-
-                            {['tablettes', 'telephones'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails des appareils électroniques</Typography>
-                                    <TextField
-                                        label="Capacité"
-                                        fullWidth
-                                        value={data.capacite}
-                                        onChange={e => setData('capacite', e.target.value)}
-                                        error={!!errors.capacite}
-                                        helperText={errors.capacite}
-                                    />
-                                </Box>
-                            )}
-
-                            {['gros_electromenager', 'petit_electromenager'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails des appareils électroménagers</Typography>
-                                    <TextField
-                                        label="Source d'énergie"
-                                        fullWidth
-                                        value={data.source_energie}
-                                        onChange={e => setData('source_energie', e.target.value)}
-                                        error={!!errors.source_energie}
-                                        helperText={errors.source_energie}
-                                    />
-                                </Box>
-                            )}
-
-                            {['cuisine', 'maison'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails de cuisine et maison</Typography>
-                                    <TextField
-                                        label="Type de cuisine"
-                                        fullWidth
-                                        value={data.type_cuisine}
-                                        onChange={e => setData('type_cuisine', e.target.value)}
-                                        error={!!errors.type_cuisine}
-                                        helperText={errors.type_cuisine}
-                                    />
-                                </Box>
-                            )}
-
-                            {['meubles', 'deco', 'bureau'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails des meubles et décorations</Typography>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <TextField
-                                            label="Style"
-                                            fullWidth
-                                            value={data.style}
-                                            onChange={e => setData('style', e.target.value)}
-                                            error={!!errors.style}
-                                            helperText={errors.style}
-                                        />
-                                        <TextField
-                                            label="Dimension"
-                                            fullWidth
-                                            value={data.dimension}
-                                            onChange={e => setData('dimension', e.target.value)}
-                                            error={!!errors.dimension}
-                                            helperText={errors.dimension}
-                                        />
-                                        <TextField
-                                            label="Unité"
-                                            fullWidth
-                                            value={data.unite}
-                                            onChange={e => setData('unite', e.target.value)}
-                                            error={!!errors.unite}
-                                            helperText={errors.unite}
-                                        />
-                                        <TextField
-                                            label="Forme"
-                                            fullWidth
-                                            value={data.forme}
-                                            onChange={e => setData('forme', e.target.value)}
-                                            error={!!errors.forme}
-                                            helperText={errors.forme}
-                                        />
-                                    </div>
-                                </Box>
-                            )}
-
-                            {['outils', 'jardin', 'bricolage'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails des outils, jardin et bricolage</Typography>
-                                    <TextField
-                                        label="Caractéristique"
-                                        fullWidth
-                                        value={data.caracteristique}
-                                        onChange={e => setData('caracteristique', e.target.value)}
-                                        error={!!errors.caracteristique}
-                                        helperText={errors.caracteristique}
-                                    />
-                                </Box>
-                            )}
-
-                            {['sport', 'loisir', 'voyage'].includes(selectedCategory) && (
-                                <Box mt={4}>
-                                    <Typography variant="h6" gutterBottom>Détails des sports, loisirs et voyages</Typography>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <TextField
-                                            label="Utilisation"
-                                            fullWidth
-                                            value={data.utilisation}
-                                            onChange={e => setData('utilisation', e.target.value)}
-                                            error={!!errors.utilisation}
-                                            helperText={errors.utilisation}
-                                        />
-                                        <TextField
-                                            label="Fonctions"
-                                            fullWidth
-                                            value={data.fonctions}
-                                            onChange={e => setData('fonctions', e.target.value)}
-                                            error={!!errors.fonctions}
-                                            helperText={errors.fonctions}
-                                        />
-                                    </div>
-                                </Box>
-                            )}
-
-                            <Box mt={6}>
-                                <Button variant="contained" color="primary" type="submit">
-                                    Créer l'annonce
-                                </Button>
-                            </Box>
-                        </div>
-                    </div>
+                        <Box mt={2}>
+                            <Button 
+                                variant="contained"
+                                fullWidth
+                                size="large"
+                                sx={{
+                                    color: 'white',
+                                    textTransform: 'none',
+                                    fontSize: '1rem',
+                                    py: 1.5
+                                }}
+                                type="submit"
+                            >
+                                Publier l'annonce
+                            </Button>
+                        </Box>
+                    </form>
 
                 </div>
             </div>

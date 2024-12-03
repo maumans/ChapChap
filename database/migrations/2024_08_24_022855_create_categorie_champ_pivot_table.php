@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accessoires', function (Blueprint $table) {
+        Schema::create('categorie_champ', function (Blueprint $table) {
             $table->id();
-            $table->string('libelle')->nullable();
-            $table->longText('description')->nullable();
-            $table->boolean('status')->default(true)->nullable();
+            $table->foreignId('categorie_id')->constrained('categories')->cascadeOnDelete();
+            $table->foreignId('champ_id')->constrained('champs')->cascadeOnDelete();
+            $table->unique(['categorie_id', 'champ_id']);
             $table->timestamps();
+
         });
     }
 
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accessoires');
+        Schema::dropIfExists('categorie_champ_pivot');
     }
 };

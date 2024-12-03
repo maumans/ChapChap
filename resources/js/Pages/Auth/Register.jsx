@@ -34,20 +34,36 @@ export default function Register({categories}) {
 
                 <form onSubmit={submit}>
                     <div>
-                        <InputLabel htmlFor="name" value="Name" />
+                        <InputLabel htmlFor="prenom" value="Prénom" />
 
                         <TextInput
-                            id="name"
-                            name="name"
-                            value={data.name}
+                            id="prenom"
+                            name="prenom"
+                            value={data.prenom}
                             className="mt-1 block w-full"
                             autoComplete="name"
                             isFocused={true}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => setData('prenom', e.target.value)}
                             required
                         />
 
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.prenom} className="mt-2" />
+                    </div>
+
+                    <div>
+                        <InputLabel htmlFor="nom" value="Nom" />
+
+                        <TextInput
+                            id="nom"
+                            name="nom"
+                            value={data.nom}
+                            className="mt-1 block w-full"
+                            autoComplete="nom"
+                            onChange={(e) => setData('nom', e.target.value)}
+                            required
+                        />
+
+                        <InputError message={errors.nom} className="mt-2" />
                     </div>
 
                     <div className="mt-4">
@@ -68,7 +84,7 @@ export default function Register({categories}) {
                     </div>
 
                     <div className="mt-4">
-                        <InputLabel htmlFor="password" value="Password" />
+                        <InputLabel htmlFor="password" value="Mot de passe" />
 
                         <TextInput
                             id="password"
@@ -85,7 +101,7 @@ export default function Register({categories}) {
                     </div>
 
                     <div className="mt-4">
-                        <InputLabel htmlFor="password_confirmation" value="Confirm Password" />
+                        <InputLabel htmlFor="password_confirmation" value="Confirmer le mot de passe" />
 
                         <TextInput
                             id="password_confirmation"
@@ -104,13 +120,13 @@ export default function Register({categories}) {
                     <div className="flex items-center justify-end mt-4">
                         <Link
                             href={route('login')}
-                            className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                         >
-                            Already registered?
+                            Déjà enregistré?
                         </Link>
 
                         <PrimaryButton className="ms-4" disabled={processing}>
-                            Register
+                            Enregistrer
                         </PrimaryButton>
                     </div>
                 </form>
