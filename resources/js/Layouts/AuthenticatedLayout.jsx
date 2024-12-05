@@ -11,7 +11,6 @@ import {
     MenuItem,
     OutlinedInput,
     Paper,
-    Popover,
     Select,
     ThemeProvider
 } from "@mui/material";
@@ -49,14 +48,9 @@ export default function Authenticated({ user, header, children,categories }) {
     const [categorieHover, setCategorieHover] = useState(null);
 
     const [anchorEl, setAnchorEl] = useState(null);
-    const [hoveredCategory, setHoveredCategory] = useState(null);
-    const [menu, setMenu] = useState(false);
-    const [main, setMain] = useState(false);
-    const open = Boolean(anchorEl) && categorieHover !== null;
-    const timeoutRef = useRef(null);
-
-    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-    const popoverTimeout = useRef(null);
+    const [hoveredItem, setHoveredItem] = useState(null);
+    const [isHovering, setIsHovering] = useState(false);
+    const hoverTimer = useRef(null);
 
     const handlePopoverOpen = (event, category) => {
         clearTimeout(popoverTimeout.current);
@@ -88,6 +82,9 @@ export default function Authenticated({ user, header, children,categories }) {
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
+        if (hoverTimer.current) {
+            clearTimeout(hoverTimer.current);
+        }
         setAnchorEl(null);
         setCategorieHover(null);
         setMain(false);
@@ -95,20 +92,38 @@ export default function Authenticated({ user, header, children,categories }) {
     };
 
     function handleMouseEnter(e, c) {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
+        setHoveredItem(c);
+        setIsHovering(true);
+        
+        // Clear any existing timers
+        if (hoverTimer.current) {
+            clearTimeout(hoverTimer.current);
         }
-        setAnchorEl(e.currentTarget);
-        setCategorieHover(c);
-        setMain(true);
-        setMenu(true);
+        
+        // Start new timer
+        hoverTimer.current = setTimeout(() => {
+            setAnchorEl(e.currentTarget);
+            setCategorieHover(c);
+        }, 1000);
     }
 
-    // Nettoyer le timeout lors du démontage du composant
+    function handleMouseLeave() {
+        setHoveredItem(null);
+        setIsHovering(false);
+        
+        if (hoverTimer.current) {
+            clearTimeout(hoverTimer.current);
+        }
+        
+        setAnchorEl(null);
+        setCategorieHover(null);
+    }
+
+    // Cleanup on unmount
     useEffect(() => {
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
+            if (hoverTimer.current) {
+                clearTimeout(hoverTimer.current);
             }
         };
     }, []);
@@ -327,79 +342,83 @@ export default function Authenticated({ user, header, children,categories }) {
                             </div>
                         </div>
                         <Divider className={'flex md:hidden'}/>
-                        <div onMouseLeave={handleClose}>
-                            <CategorieMain categories={categories} handleMouseEnter={handleMouseEnter}/>
-                            <Popover
-                                id="mouse-over-popover"
-                                open={open}
+                        <div onMouseLeave={handleMouseLeave}>
+                            <style>
+                                {`
+                                    @keyframes borderProgress {
+                                        from {
+                                            width: 0;
+                                        }
+                                        to {
+                                            width: 100%;
+                                        }
+                                    }
+                                    
+                                    .category-item {
+                                        position: relative;
+                                    }
+                                    
+                                    .category-item::after {
+                                        content: '';
+                                        position: absolute;
+                                        bottom: 0;
+                                        left: 0;
+                                        height: 2px;
+                                        background-color: #22C55E;
+                                        width: 0;
+                                    }
+                                    
+                                    .category-item.hovering::after {
+                                        animation: borderProgress 1s linear;
+                                    }
+                                `}
+                            </style>
+                            <CategorieMain 
+                                categories={categories} 
+                                handleMouseEnter={handleMouseEnter}
+                                handleMouseLeave={handleMouseLeave}
+                                hoveredItem={hoveredItem}
+                                isHovering={isHovering}
+                            />
+                            <Menu
+                                id="category-menu"
                                 anchorEl={anchorEl}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                                PaperProps={{
-                                    style: { 
-                                        marginTop: '8px',
+                                open={Boolean(anchorEl)}
+                                onClose={handleMouseLeave}
+                                sx={{
+                                    mt: '8px',
+                                    '& .MuiPaper-root': {
+                                        width: '80%',
+                                        maxWidth: '100%',
                                         borderRadius: 0,
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                                         borderTop: '1px solid rgba(0,0,0,0.1)',
-                                        width: '80%',
-                                        maxWidth: '100%',
+                                    },
+                                }}
+                                MenuListProps={{
+                                    onMouseLeave: handleMouseLeave,
+                                    style: {
+                                        padding: 0,
                                     }
                                 }}
-                                sx={{
-                                    zIndex: 30,
-                                    pointerEvents: 'auto',
-                                }}
-                                onClose={handleClose}
-                                disableRestoreFocus
-                                disableScrollLock={true}
                             >
-                                <div
-                                    className={`w-full z-50 flex divide-x ${menu ? 'flex transition duration-500' : 'hidden'}`}
-                                >
+                                <div className="w-full flex divide-x">
                                     <div className={'w-3/12 bg-green-50 font-bold text-lg p-3 first-letter:uppercase'}>
-                                        {
-                                            categorieHover && categorieHover.nom
-                                        }
+                                        {categorieHover?.nom}
                                     </div>
-                                    <div id={"main"} className={'w-9/12 z-50'}>
-                                        <div className={"w-full text-sm p-4 grid md:grid-cols-3 sm:grid-cols-2 gap-5"}>
-                                            {
-                                                categorieHover?.categories?.map(cat=>(
-                                                    <div key={cat.id} className={"w-full"}>
-                                                        <div className={'font-bold'}>
-                                                            <Link href={route('categorie.show',cat.id)}><div className={"first-letter:uppercase hover:text-green-500"}>{cat?.nom}</div></Link>
-                                                        </div>
-
-                                                        <div className={'grid gap-2'}>
-                                                            {
-                                                                cat?.categories?.length>0
-                                                                &&
-                                                                <Divider/>
-                                                            }
-
-                                                            {
-                                                                cat?.categories?.map(c=>(
-                                                                    <div key={c.id}>
-                                                                        <Link href={route('categorie.show',c.id)}>
-                                                                            <div className={"first-letter:uppercase hover:text-green-500"}>{c?.nom}</div>
-                                                                        </Link>
-                                                                    </div>
-                                                                ))
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            }
+                                    <div className={'w-9/12'}>
+                                        <div className={'grid grid-cols-3 gap-4 p-4'}>
+                                            {categorieHover?.categories?.map(c => (
+                                                <div key={c.id}>
+                                                    <Link href={route('categorie.show', c.id)}>
+                                                        <div className={"first-letter:uppercase hover:text-green-500"}>{c?.nom}</div>
+                                                    </Link>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                            </Popover>
+                            </Menu>
                         </div>
                     </div>
                 </header>
