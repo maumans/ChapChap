@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\DataDeletionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -68,5 +70,15 @@ Route::middleware(['auth'])->group(function () {
         [\App\Http\Controllers\Admin\CategorieController::class, 'updateChampsOrdre'])
         ->name('admin.categorie.updateChampsOrdre');
 });
+
+// Routes pour l'authentification sociale
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
+    ->name('social.login');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
+    ->name('social.callback');
+
+// Routes pour la suppression des données Facebook
+Route::match(['get', 'post'], '/data-deletion', [DataDeletionController::class, 'show'])->name('data-deletion');
+Route::get('/data-deletion/status/{id}', [DataDeletionController::class, 'status'])->name('data-deletion.status');
 
 require __DIR__.'/auth.php';

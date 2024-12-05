@@ -34,14 +34,48 @@ class RegisteredUserController extends Controller
         $request->validate([
             'prenom' => 'required|string|max:255',
             'nom' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => [
+                'required',
+                'string',
+                'unique:users',
+                function ($attribute, $value, $fail) {
+                    $cleanPhone = preg_replace('/[^0-9+]/', '', $value);
+                    if (!preg_match('/^\+?224[0-9]{9}$/', $cleanPhone)) {
+                        $fail('Le numéro de téléphone doit être un numéro guinéen valide (+224 suivi de 9 chiffres).');
+                    }
+                },
+            ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'prenom.required' => 'Le prénom est requis.',
+            'prenom.max' => 'Le prénom ne doit pas dépasser 255 caractères.',
+            'nom.required' => 'Le nom est requis.',
+            'nom.max' => 'Le nom ne doit pas dépasser 255 caractères.',
+            'email.required' => 'L\'adresse email est requise.',
+            'email.email' => 'L\'adresse email n\'est pas valide.',
+            'email.unique' => 'Cette adresse email est déjà utilisée.',
+            'phone.required' => 'Le numéro de téléphone est requis.',
+            'phone.unique' => 'Ce numéro de téléphone est déjà utilisé.',
+            'password.required' => 'Le mot de passe est requis.',
+            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
+        // Nettoyer et formater le numéro de téléphone
+        $cleanPhone = preg_replace('/[^0-9+]/', '', $request->phone);
+        if (!str_starts_with($cleanPhone, '+224')) {
+            if (str_starts_with($cleanPhone, '224')) {
+                $cleanPhone = '+' . $cleanPhone;
+            } else {
+                $cleanPhone = '+224' . $cleanPhone;
+            }
+        }
+
         $user = User::create([
-            'prenom' => $request->nom,
-            'nom' => $request->prenom,
+            'prenom' => $request->prenom,
+            'nom' => $request->nom,
             'email' => $request->email,
+            'phone' => $cleanPhone,
             'password' => Hash::make($request->password),
         ]);
 

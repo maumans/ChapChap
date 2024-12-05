@@ -341,20 +341,23 @@ export default function Authenticated({ user, header, children,categories }) {
                                     vertical: 'top',
                                     horizontal: 'left',
                                 }}
+                                PaperProps={{
+                                    style: { 
+                                        marginTop: '8px',
+                                        borderRadius: 0,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        borderTop: '1px solid rgba(0,0,0,0.1)',
+                                        width: '80%',
+                                        maxWidth: '100%',
+                                    }
+                                }}
+                                sx={{
+                                    zIndex: 30,
+                                    pointerEvents: 'auto',
+                                }}
                                 onClose={handleClose}
                                 disableRestoreFocus
                                 disableScrollLock={true}
-                                PaperProps={{
-                                    style: {
-                                        width: '100%',
-                                        marginTop: '-1px'
-                                    },
-                                    onMouseEnter: () => {
-                                        setMain(true);
-                                        setMenu(true);
-                                    },
-                                    onMouseLeave: handleClose
-                                }}
                             >
                                 <div
                                     className={`w-full z-50 flex divide-x ${menu ? 'flex transition duration-500' : 'hidden'}`}
